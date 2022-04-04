@@ -1,2 +1,77 @@
 #!/bin/sh
-dmenu_path | dmenu "$@" | ${SHELL:-"/bin/sh"} &
+source ~/.cache/wal/colors.sh
+dmenucmd="dmenu -sb "$color0" -sf "$color6" -nf "$color0" -nb "$color6" -l 20 -fn "misctamsyn:size=11""
+
+steam_menu() {
+choice=$(find ~/.steam/steam/steamapps -maxdepth 1 -type f -name '*.acf' -exec awk -F '"' '/"name/{ printf $4 "|" } END { print "" }' {} \; | column -t -s '|' | sort -k 2 | grep -v 'Steam\|Proton' | $dmenucmd )
+
+choicep=$(find ~/.steam/steam/steamapps -maxdepth 1 -type f -name '*.acf' -exec awk -F '"' '/"appid|name/{ printf $4 "|" } END { print "" }' {} \; | column -t -s '|' | sort -k 2 | grep "$choice" | tr -d "$choice" )
+
+if [[ -z $choice ]]; then exit
+else steam steam://run/$choicep
+fi
+}
+
+pass_menu(){
+shopt -s nullglob globstar
+
+typeit=0
+if [[ $1 == "--type" ]]; then
+	typeit=1
+	shift
+fi
+
+if [[ -n $WAYLAND_DISPLAY ]]; then
+	dmenu=dmenu-wl
+	xdotool="ydotool type --file -"
+elif [[ -n $DISPLAY ]]; then
+	dmenu=dmenu
+	xdotool="xdotool type --clearmodifiers --file -"
+else
+	echo "Error: No Wayland or X11 display detected" >&2
+	exit 1
+fi
+
+prefix=${PASSWORD_STORE_DIR-~/.password-store}
+password_files=( "$prefix"/**/*.gpg )
+password_files=( "${password_files[@]#"$prefix"/}" )
+password_files=( "${password_files[@]%.gpg}" )
+
+password=$(printf '%s\n' "${password_files[@]}" | $dmenucmd "$@")
+
+[[ -n $password ]] || exit
+
+if [[ $typeit -eq 0 ]]; then
+	pass show -c "$password" 2>/dev/null
+else
+	pass show "$password" | { IFS= read -r pass; printf %s "$pass"; } | $xdotool
+fi
+}
+
+print_screen_select(){
+scrot --select /tmp/scrot.png
+filename=$( echo "filename" | $dmenucmd )
+mv /tmp/scrot.png ~/Pictures/scrots/$filename.png
+}
+
+print_full_screen(){
+scrot /tmp/scrot.png
+filename=$( echo "filename" | $dmenucmd )
+mv /tmp/scrot.png ~/Pictures/scrots/$filename.png
+}
+
+list=$(
+echo -e "killall Xorg
+shutdown now
+shutdown -r 0
+bashwal -t
+xset -dpms s off"
+declare -F | cut -b 12-
+dmenu_path
+)
+
+dmenulist=$( echo "$list" | dmenu "$@" )
+case $dmenulist in
+	*"$(declare -F | cut -b 12-)"*) $dmenulist ;;
+	*) ${SHELL:-"/bin/sh"} & $dmenulist
+esac
