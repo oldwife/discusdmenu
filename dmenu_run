@@ -1,6 +1,6 @@
 #!/bin/sh
 source ~/.cache/wal/colors.sh
-dmenucmd="dmenu -sb "$color0" -sf "$color6" -nf "$color0" -nb "$color6" -l 20 -fn "misctamsyn:size=11""
+dmenucmd="dmenu -sb "$color0" -sf "$color6" -nf "$color0" -nb "$color6" -l 20 -i -fn "misctamsyn:size=11""
 
 steam_menu() {
 choice=$(find ~/.steam/steam/steamapps -maxdepth 1 -type f -name '*.acf' -exec awk -F '"' '/"name/{ printf $4 "|" } END { print "" }' {} \; | column -t -s '|' | sort -k 2 | grep -v 'Steam\|Proton' | $dmenucmd )
