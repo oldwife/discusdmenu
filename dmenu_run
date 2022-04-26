@@ -60,6 +60,10 @@ filename=$( echo "filename" | $dmenucmd )
 mv /tmp/scrot.png ~/Pictures/scrots/$filename.png
 }
 
+blue_menu(){
+	bluetoothctl power on ; bluetoothctl connect "$(bluetoothctl devices | awk '{print $2}' | dmenu)"
+}
+
 list=$(
 echo -e "killall Xorg
 shutdown now
