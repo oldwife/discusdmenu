@@ -61,7 +61,7 @@ mv /tmp/scrot.png ~/Pictures/scrots/$filename.png
 }
 
 blue_menu(){
-	bluetoothctl power on ; bluetoothctl connect "$(bluetoothctl devices | awk '{print $2}' | dmenu)"
+	bluetoothctl power on ; bluetoothctl connect "$(bluetoothctl devices | awk '{print $2}' | $dmenucmd )"
 }
 
 list=$(
